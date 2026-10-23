@@ -407,13 +407,16 @@ class EventsExtension extends \Nette\DI\CompilerExtension
 			}
 
 			$dispatchAnnotation = self::propertyHasAnnotation($property, 'globalDispatchFirst');
-			$def->addSetup('$' . $name.'[]', [
-				new Statement($this->prefix('@manager') . '::createEvent', [
-					[$class->getName(), $name],
-					new PhpLiteral('$service->' . $name),
-					NULL,
-					$dispatchAnnotation ?? $this->loadedConfig['globalDispatchFirst'],
-				]),
+			// replace (not append) - Event already wraps current listeners, appending would invoke them twice
+			$def->addSetup('$' . $name, [
+				[
+					new Statement($this->prefix('@manager') . '::createEvent', [
+						[$class->getName(), $name],
+						new PhpLiteral('$service->' . $name),
+						NULL,
+						$dispatchAnnotation ?? $this->loadedConfig['globalDispatchFirst'],
+					]),
+				],
 			]);
 		}
 	}
